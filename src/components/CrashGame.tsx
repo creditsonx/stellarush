@@ -8,6 +8,10 @@ import { GameHistory } from './GameHistory';
 import { PlayersList } from './PlayersList';
 import { ChatBox } from './ChatBox';
 import { useGameStats } from '../hooks/useGameStats';
+import { useAudio, useHapticFeedback } from '../hooks/useAudio';
+import { useAutobet, type AutobetSettings } from '../hooks/useAutobet';
+import { AudioControls } from './AudioControls';
+import { AutobetPanel } from './AutobetPanel';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 interface GameState {
@@ -30,6 +34,9 @@ export function CrashGame() {
   const { connected, publicKey } = useWallet();
   const { connection } = useConnection();
   const stats = useGameStats(); // Dynamic stats hook
+  const { playSound } = useAudio();
+  const { haptics } = useHapticFeedback();
+  const autobet = useAutobet();
 
   // Game state
   const [gameState, setGameState] = useState<GameState>({
@@ -81,7 +88,11 @@ export function CrashGame() {
       ...prev,
       canCashOut: prev.hasActiveBet,
     }));
-  }, [generateCrashPoint]);
+
+    // Play rocket launch sound and haptic feedback
+    playSound.rocketLaunch();
+    haptics.notification();
+  }, [generateCrashPoint, playSound, haptics]);
 
   // Game loop
   useEffect(() => {
@@ -102,6 +113,18 @@ export function CrashGame() {
           crashed: true,
           isActive: false
         }));
+
+        // Play crash sound and haptic feedback
+        playSound.crash();
+        haptics.crash();
+
+        // Handle autobet result (player lost)
+        if (autobet.isRunning && playerState.hasActiveBet && playerState.currentBet) {
+          autobet.handleGameResult(false, playerState.currentBet, 0, (nextBetAmount) => {
+            // Place next autobet
+            handlePlaceBet(nextBetAmount);
+          });
+        }
 
         // Player loses if they didn't cash out
         setPlayerState(prev => ({
@@ -151,12 +174,33 @@ export function CrashGame() {
         hasActiveBet: true,
         balance: prev.balance - amount,
       }));
+
+      // Play bet placed sound and haptic feedback
+      playSound.betPlaced();
+      haptics.betPlaced();
     }
-  }, [playerState.balance, gameState.isActive]);
+  }, [playerState.balance, gameState.isActive, playSound, haptics]);
 
   const handleCashOut = useCallback(() => {
     if (playerState.canCashOut && playerState.currentBet) {
       const payout = playerState.currentBet * gameState.multiplier;
+
+      // Play cash out sound and haptic feedback
+      playSound.cashOut();
+      haptics.cashOut();
+
+      // Handle autobet result (player won)
+      if (autobet.isRunning) {
+        autobet.handleGameResult(true, playerState.currentBet, payout, (nextBetAmount) => {
+          // Place next autobet after round ends
+          setTimeout(() => {
+            if (!gameState.isActive) {
+              handlePlaceBet(nextBetAmount);
+            }
+          }, 1000);
+        });
+      }
+
       setPlayerState(prev => ({
         ...prev,
         balance: prev.balance + payout,
@@ -165,7 +209,19 @@ export function CrashGame() {
         canCashOut: false,
       }));
     }
-  }, [playerState.canCashOut, playerState.currentBet, gameState.multiplier]);
+  }, [playerState.canCashOut, playerState.currentBet, gameState.multiplier, playSound, haptics, autobet, gameState.isActive, handlePlaceBet]);
+
+  // Autobet handlers
+  const handleStartAutobet = useCallback((settings: AutobetSettings) => {
+    autobet.startAutobet(
+      (amount) => handlePlaceBet(amount),
+      () => handleCashOut()
+    );
+  }, [autobet, handlePlaceBet, handleCashOut]);
+
+  const handleStopAutobet = useCallback(() => {
+    autobet.stopAutobet();
+  }, [autobet]);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -181,8 +237,11 @@ export function CrashGame() {
               Round #{gameState.roundId || '...'}
             </div>
           </div>
-          <div className="text-sm text-gray-400">
-            {gameState.isActive ? 'GAME ACTIVE' : 'WAITING FOR PLAYERS'}
+          <div className="flex items-center gap-4">
+            <AudioControls compact />
+            <div className="text-sm text-gray-400">
+              {gameState.isActive ? 'GAME ACTIVE' : 'WAITING FOR PLAYERS'}
+            </div>
           </div>
         </div>
       </div>
@@ -201,7 +260,7 @@ export function CrashGame() {
           </div>
 
           {/* Betting Panel */}
-          <div className="xl:col-span-1">
+          <div className="xl:col-span-1 space-y-4">
             <BettingPanel
               isGameActive={gameState.isActive}
               canBet={!gameState.isActive && !gameState.crashed}
@@ -211,6 +270,12 @@ export function CrashGame() {
               onCashOut={handleCashOut}
               playerBalance={playerState.balance}
               currentBet={playerState.currentBet}
+            />
+            <AutobetPanel
+              onStartAutobet={handleStartAutobet}
+              onStopAutobet={handleStopAutobet}
+              playerBalance={playerState.balance}
+              isGameActive={gameState.isActive}
             />
           </div>
 
