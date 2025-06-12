@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/components/WalletProvider";
 import { PWAInstaller } from "@/components/PWAInstaller";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -96,6 +97,7 @@ export default function RootLayout({
         <WalletProvider>
           {children}
           <PWAInstaller />
+          <ConnectionStatus className="fixed top-4 left-4 z-50" />
         </WalletProvider>
       </body>
     </html>

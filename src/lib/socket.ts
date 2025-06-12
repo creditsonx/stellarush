@@ -1,10 +1,10 @@
-import { io, Socket } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
 
 // WebSocket server configuration
 const getSocketUrl = (): string => {
   // In production, use the deployed Railway server
   if (process.env.NODE_ENV === 'production') {
-    return process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'https://stellarush-server-production.up.railway.app';
+    return process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'https://web-production-4a1c8.up.railway.app';
   }
 
   // In development, use local server
