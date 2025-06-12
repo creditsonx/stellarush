@@ -1,4 +1,4 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
 import { logger } from '../utils/logger';
 import { CrashPointGenerator } from '../utils/CrashPointGenerator';
 
@@ -72,7 +72,7 @@ export class GameManager {
   private gameState: GameState;
   private gameInterval: NodeJS.Timeout | null = null;
   private crashPointGenerator: CrashPointGenerator;
-  private lastUpdateTime: number = 0;
+  private lastUpdateTime = 0;
   private readonly GAME_SPEED = 50; // milliseconds between updates
   private readonly BETTING_TIME = 5000; // 5 seconds betting phase
   private readonly WAITING_TIME = 3000; // 3 seconds waiting phase

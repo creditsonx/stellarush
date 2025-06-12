@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 export class CrashPointGenerator {
   private serverSeed: string;
-  private nonce: number = 0;
+  private nonce = 0;
 
   constructor() {
     this.serverSeed = this.generateServerSeed();
@@ -28,7 +28,7 @@ export class CrashPointGenerator {
   private hashToCrashPoint(hash: string): number {
     // Take first 8 characters of hash
     const hex = hash.slice(0, 8);
-    const num = parseInt(hex, 16);
+    const num = Number.parseInt(hex, 16);
 
     // Convert to crash point between 1.00x and ~100x
     // Using exponential distribution for realistic game feel

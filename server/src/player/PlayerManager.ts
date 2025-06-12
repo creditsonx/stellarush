@@ -1,4 +1,4 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
 import { logger } from '../utils/logger';
 
 interface PlayerProfile {
@@ -263,7 +263,7 @@ export class PlayerManager {
       .length;
   }
 
-  public getTopPlayers(limit: number = 10): PlayerProfile[] {
+  public getTopPlayers(limit = 10): PlayerProfile[] {
     return Array.from(this.playerProfiles.values())
       .sort((a, b) => {
         // Sort by level first, then by experience

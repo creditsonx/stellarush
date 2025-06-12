@@ -1,4 +1,4 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
 import { logger } from '../utils/logger';
 
 interface ChatMessage {
@@ -255,7 +255,7 @@ export class ChatManager {
     this.broadcastMessage(systemMessage);
   }
 
-  public getRecentMessages(count: number = 50): ChatMessage[] {
+  public getRecentMessages(count = 50): ChatMessage[] {
     return this.messages.slice(0, count);
   }
 

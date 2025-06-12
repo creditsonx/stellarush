@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
+import 'dotenv/config';
 import { GameManager } from './game/GameManager';
 import { ChatManager } from './chat/ChatManager';
 import { PlayerManager } from './player/PlayerManager';
@@ -12,10 +13,20 @@ const app = express();
 const server = createServer(app);
 
 // CORS configuration for local development and production
+const getAllowedOrigins = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return [
+      'https://stellarush.netlify.app',
+      'https://stellarush.com',
+      'https://creditsonx.github.io',
+      'https://stellarush-game.vercel.app'
+    ];
+  }
+  return ['http://localhost:3000', 'http://127.0.0.1:3000'];
+};
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://stellarush.netlify.app', 'https://creditsonx.github.io']
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: getAllowedOrigins(),
   methods: ['GET', 'POST'],
   credentials: true
 };

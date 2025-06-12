@@ -7,6 +7,9 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "postbuild": "cp package.json dist/",
+    "railway:build": "npm run build",
+    "railway:start": "npm run start",
     "test": "jest",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix"
@@ -45,6 +48,7 @@
     "ts-jest": "^29.1.1"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
